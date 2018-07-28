@@ -5,6 +5,7 @@ import random
 df = pd.read_csv('short_tweets.csv')
 
 print(len(df.Text))
+# this has not been staged ..... or cimmitted!
 from difflib import SequenceMatcher as sm
 def list_random(ran):
     random.shuffle(ran)

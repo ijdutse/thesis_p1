@@ -1,2 +1,3 @@
 # thesis_p1
 Repo for tweets separation degrees
+This section will track relevant changes made to the project folder and basic instructions on how to use the software ...

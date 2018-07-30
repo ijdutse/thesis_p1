@@ -6,8 +6,15 @@ import pandas as pd
 import random
 import os
 from difflib import SequenceMatcher as sm
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import math
+from scipy.spatial.distance import pdist, squareform
+np.set_printoptions(precision=2)
+
 
 # THE FILE PATH
+#file_path ='/home/ijdutse/thesis_p1/full_tweets.txt'
 file_path ='/home/ijdutse/thesis_p1/short_tweets.txt'
 
 
@@ -15,16 +22,74 @@ file_path ='/home/ijdutse/thesis_p1/short_tweets.txt'
 def main():
     with open(file_path,'r') as f:
         text = f.readlines()
-        matching_score = get_random_tweets_sim(text)
-        print('The two random tweets have a matching score of {}'.format(matching_score))
+        m_score = get_random_tweets_sim(text)
+        print('The two random tweets have a matching score of {}'.format(m_score))
+        #print(get_random_tweets_sim(text)[1])
+        # use the get_tweets_sim function to compute the similarity between the two random tweets if the matching score < 50 ...
+       # if matching_score < 50:
+        #	get_tweets_sim(x, y)
+        #	relevant.append()
+        #else:
+        #	continue
+        #tf = transform_tweets(text)
+        #print(tf)
 
 # FUNCTION TO PICK RANDOM TWEETS AND COMPUTE THE MATCHING SCORE ... MATCHING SCORE > 50 ARE LIKELY TO BE SAME/DUPLICATE TWEETS, HENCE DISCARDED
 def get_random_tweets_sim(tweets):
-    random.shuffle(tweets)
-    x = tweets[0]
-    y = tweets[1]
-    sim = sm(None,x, y)
-    return round(sim.ratio()*100,2) #, sim.ratio()
+    scores = []
+    keep = []
+    k = len(tweets)
+    tracker = 0
+    while tracker < k:
+    	random.shuffle(tweets)
+    	tweet1 = tweets[0]
+    	tweet2 = tweets[1]
+    	sim = sm(None, tweet1, tweet2)
+    	matching_score = round(sim.ratio()*100,2)
+    	scores.append(matching_score)
+    	if matching_score > 60:
+    		continue
+    	else:
+    		keep.append((tweet1,tweet2))
+    	tracker +=1
+    return len(scores),scores, matching_score, tweet1, tweet2, [score for score in scores if score>30], keep
+
+# TRANSFORM TWEETS TO NUMERIC FORM FOR EASE OF COMPUTATION
+
+def transform_tweets(tweets):
+	vectorizer = TfidfVectorizer()
+	tfidf_matrix = vectorizer.fit_transform(tweets)
+	#print(tfidf_matrix.shape)
+	#print(len(vectorizer.get_feature_names()))
+	# USING THE COUNTVECTORIZER:
+	count_vect = CountVectorizer()
+	X = count_vect.fit_transform(tweets)
+	concise_X = squareform(pdist(X.toarray(), 'cosine'))
+	#print(concise_X)
+	#print(concise_X.shape)
+	#print(X.toarray().shape)	
+	#small = concise_X[:6]
+	#print(small)
+	#print(cosine_similarity(concise_X[0:2], concise_X))
+	#print(cosine_similarity(concise_X[:], concise_X))
+	return concise_X
+	
+
+
+
+
+# COMPUTE THE SIMILARITY BETWEEN TWO RANDOM TWEETS USING THE COSINE MEASURE
+def get_tweets_sim(x, y):
+	return cosine_similarity(x,y)
+	# IF USING transform_tweets function:
+	#cosine_similarity(tfidf_matrix[0:1], tfidf_matrix)
+	# COMPUTE THE ANGLE BETWEEN THE TWO TWEETS:
+	#co_sim = #sim_score of any document in the matrix
+	#radian_angle = math.acos(co_sim)
+	#degree_angle = math.degrees(radian_angle)
+	#print(degree_angle)
+
+
 
 # INSTANTITATE THE MAIN FUNCTION
 if __name__=='__main__':

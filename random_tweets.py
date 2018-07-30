@@ -22,20 +22,17 @@ file_path ='/home/ijdutse/thesis_p1/short_tweets.txt'
 def main():
     with open(file_path,'r') as f:
         text = f.readlines()
-        m_score = get_random_tweets_sim(text)
-        print('The two random tweets have a matching score of {}'.format(m_score))
-        #print(get_random_tweets_sim(text)[1])
-        # use the get_tweets_sim function to compute the similarity between the two random tweets if the matching score < 50 ...
-       # if matching_score < 50:
-        #	get_tweets_sim(x, y)
-        #	relevant.append()
-        #else:
-        #	continue
+        x, y, m_score = get_tweets_matching(text)
+        print(x)
+        print(y)
+        print('The two random tweets have a matching score of: {}'.format(m_score))
+        tf = get_tfidf_matrix((x,y))
+        print(tf)
         #tf = transform_tweets(text)
         #print(tf)
 
 # FUNCTION TO PICK RANDOM TWEETS AND COMPUTE THE MATCHING SCORE ... MATCHING SCORE > 50 ARE LIKELY TO BE SAME/DUPLICATE TWEETS, HENCE DISCARDED
-def get_random_tweets_sim(tweets):
+def get_tweets_matching(tweets):
     scores = []
     keep = []
     k = len(tweets)
@@ -52,11 +49,13 @@ def get_random_tweets_sim(tweets):
     	else:
     		keep.append((tweet1,tweet2))
     	tracker +=1
-    return len(scores),scores, matching_score, tweet1, tweet2, [score for score in scores if score>30], keep
+    return tweet1, tweet2, matching_score #{matching_score}, (tweet1, tweet2)
+    #return len(scores),scores, matching_score, tweet1, tweet2, [score for score in scores if score>30], keep
+
 
 # TRANSFORM TWEETS TO NUMERIC FORM FOR EASE OF COMPUTATION
 
-def transform_tweets(tweets):
+def get_tfidf_matrix(tweets):
 	vectorizer = TfidfVectorizer()
 	tfidf_matrix = vectorizer.fit_transform(tweets)
 	#print(tfidf_matrix.shape)

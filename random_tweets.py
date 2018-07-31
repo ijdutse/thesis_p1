@@ -12,8 +12,8 @@ from scipy.spatial.distance import pdist, squareform
 np.set_printoptions(precision=2)
 
 
-#file_path ='/home/ijdutse/thesis_p1/full_tweets.txt'
-file_path ='/home/ijdutse/thesis_p1/short_tweets.txt'
+#file_path ='/home/ijdutse/tweets_separation_degrees/full_tweets.txt'
+file_path ='/home/ijdutse/tweets_separation_degrees/short_tweets.txt'
 
 
 # THE MAIN FUNCTION

@@ -15,47 +15,30 @@ file_path ='/home/ijdutse/tweets_separation_degrees/short_tweets.txt'
 # ... crux of the activity!
 def main():
     with open(file_path,'r') as f:
-        tweets = f.readlines()
-        
-        # discard duplicate tweets or near duplicate based on sequence matching:
-        relevant_tweets = get_tweets_matching(tweets)
-
-        # transform tweets to tfidf matrix and compute cosine similarities:
-        existing_tweets_tfidf_matrix, transformed_incoming_tweet, tweet_similarity, indices_of_most_similar_tweets = get_tfidf_matrix_and_cosine(relevant_tweets)
-        	#existing_tweets_tfidf_matrix, transformed_incoming_tweet, tweet_similarity = get_tfidf_matrix_and_cosine(relevant_tweets)
-        	#sanity check ==> print(existing_tweets_tfidf_matrix, existing_tweets_tfidf_matrix.toarray(), existing_tweets_tfidf_matrix.toarray()[0:1], transformed_incoming_tweet, relevant_tweets, sep='\n')
-
-        # uncomment me:
-        	#for index in indices_of_most_similar_tweets[0]:
-        		#print (relevant_tweets[index])
-        		#break
+    	tweets = f.readlines() # discard duplicate tweets or near duplicate based on sequence matching:
+    	relevant_tweets = get_tweets_matching(tweets)
+    	# transform tweets to tfidf matrix and compute cosine similarities:
+    	existing_tweets_tfidf_matrix, transformed_incoming_tweet, tweets_similarity, indices_of_most_similar_tweets = get_tfidf_matrix_and_cosine(relevant_tweets)
+    	# compare the scores of first n (e.g n=5) tweets or a single incoming tweet with the rest of existing tweets:
+    	n_tweets_similarities = np.round(cosine_similarity(existing_tweets_tfidf_matrix.toarray()[0:5], existing_tweets_tfidf_matrix), 4)
+    	tweets_cosine_sim = np.round(cosine_similarity(existing_tweets_tfidf_matrix, transformed_incoming_tweet), 3)
+    	#print(print(n_tweets_similarities, tweets_cosine_sim, sep='\n')
 
         # compare an incoming tweet to existing tweets in iterative fashion:
-        results = []
-        new_tweet = transformed_incoming_tweet
-        for tweet_tfidf in existing_tweets_tfidf_matrix:
-        	tweets_cosine_sim = np.round(cosine_similarity(tweet_tfidf, new_tweet), 3)
-        	results.append(tweets_cosine_sim[0][0])
-        # sort the list of results in decreasing magnitude to return scores for most similar tweets ...
-        most_similar_tweets = sorted(results, reverse = True)
-        print(most_similar_tweets)
+    	results = []
+    	new_tweet = transformed_incoming_tweet
+    	for tweet_tfidf in existing_tweets_tfidf_matrix:
+    		tweets_cosine_sim = np.round(cosine_similarity(tweet_tfidf, new_tweet), 3)
+    		results.append(tweets_cosine_sim[0][0])
+    	#sort the list of results in decreasing magnitude to return scores for most similar tweets ...
+    	most_similar_tweets = sorted(results, reverse = True)
+    	# map the highest scores to corresponding tweets: 
+    	#print('The following tweets are the most similar to {} :'.format(input()))
+    	for tweet, score in zip(relevant_tweets, most_similar_tweets):
+    		index = most_similar_tweets.index(score)
+    		print(index, relevant_tweets[index], score, sep=':')
 
-        
-       #3: compare the scores of first n (e.g n=5) tweets or a single incoming tweet with the rest of existing tweets:
-        	#n_tweets_similarities = np.round(cosine_similarity(existing_tweets_tfidf_matrix.toarray()[0:5], existing_tweets_tfidf_matrix), 4)
-        	#print(n_tweets_similarities)
-       		#tweets_cosine_sim = np.round(cosine_similarity(existing_tweets_tfidf_matrix, transformed_incoming_tweet), 3)
-       		#print(tweets_cosine_sim)
-
-  
-        #4: A MAPPER FUNCTION .... to map respective similarity score to corresponding tweet .... 
-        #x = score_tweet_mapper()
-
-        #t = score_tweet_mapper()
-        #print(t)
-
-
-# A FUNCTION TO PICK RANDOM TWEETS AND COMPUTE THE MATCHING SCORE ... matching score > 50 are likely to be same/duplicate ... hence discarded
+# a function pick random tweets and compute matching score in order to discard duplicates ... matching score > 50 are likely to be same/duplicate ...
 def get_tweets_matching(tweets):
     scores = []
     relevant_tweets = []
@@ -74,26 +57,22 @@ def get_tweets_matching(tweets):
     		relevant_tweets.append(tweet1)
     		relevant_tweets.append(tweet2)
     	tracker +=1
-    return relevant_tweets # tweet1, tweet2, matching_score, [score for score in scores if score>30], keep
+    return relevant_tweets
 
-
-# TRANSFORM TWEETS USING TFIDF SCHEME and compute cosine similarity ... 
-
-# using tfidf:
+# transform tweets using TFIDF scheme and compute cosine similarity ... 
 def get_tfidf_matrix_and_cosine(tweets):
-	# TWEETS TFIDF MATRIX:
 	vectorizer = TfidfVectorizer()
 	existing_tweets_tfidf_matrix = vectorizer.fit_transform(tweets)
+
 	# transform an incoming tweet for comparison with existing tweets ....
 	incoming_tweet = input('Provide a sample tweet to compare with existing tweets :::')
 	transformed_incoming_tweet = vectorizer.transform([incoming_tweet])
-	# COSINE SIMILARITIES MATRIX:
-	tweet_similarity = np.round(cosine_similarity(existing_tweets_tfidf_matrix, existing_tweets_tfidf_matrix), 4)
-	indices_of_most_similar_tweets = tweet_similarity.argsort()[:,:-1]
-	#print('Indices for the most tweets in the corpus ===>')
-	#print(tweet_similarity[indices_of_most_similar_tweets])
-	#print(indices_of_most_similar_tweets, existing_tweets_tfidf_matrix.shape, tweet_similarity[indices_of_most_similar_tweets], sep='\n')
-	return existing_tweets_tfidf_matrix, transformed_incoming_tweet.toarray(), tweet_similarity, indices_of_most_similar_tweets
+
+	# cosine similarity computation:
+	tweets_similarity = np.round(cosine_similarity(existing_tweets_tfidf_matrix, existing_tweets_tfidf_matrix), 4)
+	indices_of_most_similar_tweets = tweets_similarity.argsort()[:,:-1]
+	#print('Indices for the most tweets in the corpus ===>',tweet_similarity[indices_of_most_similar_tweets], tweets_similarity[indices_of_most_similar_tweets], sep='\n')
+	return existing_tweets_tfidf_matrix, transformed_incoming_tweet.toarray(), tweets_similarity, indices_of_most_similar_tweets
 
 # alternate transformation using Countvectrorizer and sqaureform/pdist from scipy::
 def get_words_count_matrix(tweets):
@@ -104,13 +83,6 @@ def get_words_count_matrix(tweets):
 	return dense_words_matrix 
 
 
-# A MAPPER FUNCTION .... to map respective similarity score to corresponding tweet .... 
-#def score_tweet_mapper(external_tweet):
-#	x = map (lambda tweets_doc: round(cosine_similarity(tweets_tfidf, compare_tweet),3)
-
-
-
-
-# INSTANTITATE THE MAIN FUNCTION
+# instantiate ..... !
 if __name__=='__main__':
 	main()
